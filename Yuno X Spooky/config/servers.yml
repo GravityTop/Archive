@@ -1,0 +1,6 @@
+srvs:
+  srv1:
+    ip: "193.35.18.81"
+    port: 53913
+    user: "root"
+    pass: "pass"
