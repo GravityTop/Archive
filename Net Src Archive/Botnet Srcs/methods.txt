@@ -1,0 +1,28 @@
+tcpflags=
+z=xmas
+s=syn
+a=ack
+f=fin
+u=urg
+r=rst
+p=psh
+
+active=t
+t=true
+f=false
+default is passive it uses kernal sockets and active uses userland sockets
+
+
+pkttl=20-3000
+its the amount of total packets sent per ip
+
+psize=1-2048
+packet data size
+
+cons=1-300
+concurrent connections per ip
+
+payload=custompayload
+
+domain=google.com
+auto resolver do not put http/https in it
